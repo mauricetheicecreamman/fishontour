@@ -1,0 +1,908 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#111111" />
+  <title>Fisher Away Day — 2026/27 Prototype</title>
+  <style>
+    :root {
+      --ink: #151515;
+      --muted: #66645f;
+      --paper: #f3f0e9;
+      --card: #ffffff;
+      --line: #ded9cf;
+      --accent: #efb21a;
+      --accent-dark: #b67800;
+      --danger: #c13f31;
+      --good: #20704d;
+      --info: #285f8f;
+      --radius: 18px;
+      --shadow: 0 14px 38px rgba(0,0,0,.08);
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: var(--paper);
+      color: var(--ink);
+      font: 16px/1.45 Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+    button, select, input { font: inherit; }
+    a { color: inherit; }
+
+    .topbar {
+      background: var(--ink);
+      color: #fff;
+      padding: 14px 18px;
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      box-shadow: 0 2px 18px rgba(0,0,0,.24);
+    }
+    .topbar-inner {
+      max-width: 1180px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .fish-mark {
+      width: 42px;
+      height: 42px;
+      flex: 0 0 auto;
+      display: grid;
+      place-items: center;
+      border-radius: 12px;
+      background: var(--accent);
+      color: var(--ink);
+    }
+    .fish-mark svg { width: 30px; height: 30px; }
+    .brand-title { font-weight: 900; letter-spacing: -.025em; font-size: 1.08rem; }
+    .brand-subtitle { color: #cfcfcf; font-size: .78rem; margin-top: 1px; }
+    .prototype-tag {
+      margin-left: auto;
+      font-size: .73rem;
+      font-weight: 800;
+      letter-spacing: .05em;
+      text-transform: uppercase;
+      padding: 6px 9px;
+      border: 1px solid #5b5b5b;
+      border-radius: 999px;
+      color: #e7e7e7;
+    }
+
+    main {
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 24px 16px 56px;
+    }
+
+    .intro {
+      display: grid;
+      grid-template-columns: minmax(0, 1.4fr) minmax(280px, .6fr);
+      gap: 18px;
+      align-items: stretch;
+      margin-bottom: 20px;
+    }
+    .intro-copy, .origin-card {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 22px;
+      box-shadow: var(--shadow);
+    }
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      margin-bottom: 8px;
+      color: var(--accent-dark);
+      font-size: .76rem;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: .085em;
+    }
+    h1, h2, h3, p { margin-top: 0; }
+    h1 { font-size: clamp(2rem, 5vw, 3.6rem); line-height: .98; letter-spacing: -.055em; margin-bottom: 12px; }
+    h2 { font-size: clamp(1.45rem, 3vw, 2.2rem); letter-spacing: -.035em; line-height: 1.08; }
+    h3 { font-size: 1.08rem; margin-bottom: 8px; }
+    .lede { max-width: 730px; margin-bottom: 0; color: #4f4d48; font-size: 1.05rem; }
+    .data-note { margin: 14px 0 0; color: var(--muted); font-size: .82rem; }
+
+    .origin-card label { display:block; font-weight: 850; margin-bottom: 8px; }
+    .control-stack { display: grid; gap: 10px; }
+    select, input[type="text"] {
+      width: 100%;
+      border: 1px solid #bdb7ab;
+      border-radius: 12px;
+      background: #fff;
+      padding: 11px 12px;
+      outline: none;
+    }
+    select:focus, input:focus { box-shadow: 0 0 0 3px rgba(239,178,26,.28); border-color: var(--accent-dark); }
+    .helper { color: var(--muted); font-size: .79rem; margin: 8px 0 0; }
+
+    .app-grid {
+      display: grid;
+      grid-template-columns: 340px minmax(0, 1fr);
+      gap: 20px;
+      align-items: start;
+    }
+    .fixture-panel, .detail-panel {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+    }
+    .fixture-panel { padding: 14px; position: sticky; top: 86px; max-height: calc(100vh - 108px); overflow: auto; }
+    .fixture-panel-header { padding: 7px 8px 12px; }
+    .fixture-panel-header h2 { font-size: 1.3rem; margin-bottom: 4px; }
+    .fixture-panel-header p { color: var(--muted); font-size: .84rem; margin-bottom: 0; }
+    .fixture-list { display: grid; gap: 8px; }
+    .fixture-button {
+      display: grid;
+      grid-template-columns: 56px minmax(0, 1fr);
+      gap: 11px;
+      align-items: center;
+      width: 100%;
+      border: 1px solid transparent;
+      background: #f6f4ef;
+      color: var(--ink);
+      padding: 10px;
+      border-radius: 14px;
+      text-align: left;
+      cursor: pointer;
+      transition: .15s ease;
+    }
+    .fixture-button:hover { transform: translateY(-1px); border-color: #cfc8ba; }
+    .fixture-button.active { background: var(--ink); color: #fff; border-color: var(--ink); }
+    .date-block {
+      background: #fff;
+      color: var(--ink);
+      border-radius: 11px;
+      padding: 7px 4px;
+      text-align: center;
+      border: 1px solid #e4dfd5;
+    }
+    .date-block strong { display:block; font-size: 1.32rem; line-height: 1; }
+    .date-block span { display:block; text-transform: uppercase; font-weight: 900; letter-spacing: .08em; font-size: .63rem; margin-top: 3px; }
+    .fixture-opponent { font-weight: 900; line-height: 1.08; }
+    .fixture-meta { margin-top: 4px; font-size: .74rem; color: #77736b; }
+    .fixture-button.active .fixture-meta { color: #c9c9c9; }
+    .micro-badge {
+      display: inline-flex;
+      margin-top: 6px;
+      border-radius: 999px;
+      padding: 3px 7px;
+      font-size: .64rem;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: .045em;
+      background: #e4dfd3;
+      color: #4e4a42;
+    }
+    .fixture-button.active .micro-badge { background: #3b3b3b; color: #f1f1f1; }
+    .micro-badge.ready { background: #dcefe6; color: #17583d; }
+    .micro-badge.alert { background: #f7ded8; color: #8d3025; }
+
+    .detail-panel { overflow: hidden; }
+    .hero {
+      padding: 28px;
+      background:
+        radial-gradient(circle at 86% 15%, rgba(239,178,26,.28), transparent 22%),
+        linear-gradient(135deg, #171717 0%, #2c2b29 100%);
+      color: #fff;
+    }
+    .hero-top { display:flex; justify-content:space-between; align-items:flex-start; gap:14px; }
+    .competition { color: #d4d4d4; font-weight: 800; font-size: .8rem; text-transform: uppercase; letter-spacing: .075em; }
+    .hero h2 { font-size: clamp(2rem, 5vw, 3.25rem); margin: 8px 0 8px; color: #fff; }
+    .hero-meta { color: #dedede; font-weight: 650; }
+    .status-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      border-radius: 999px;
+      padding: 7px 10px;
+      font-size: .72rem;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: .045em;
+      white-space: nowrap;
+      background: #343434;
+      border: 1px solid #555;
+    }
+    .status-pill::before { content:""; width:8px; height:8px; border-radius:50%; background:#aaa; }
+    .status-pill.good::before { background:#52c487; }
+    .status-pill.warn::before { background:#efb21a; }
+    .status-pill.tba::before { background:#ed6b5a; }
+
+    .hero-actions { display:flex; flex-wrap:wrap; gap:9px; margin-top: 22px; }
+    .button {
+      display:inline-flex;
+      justify-content:center;
+      align-items:center;
+      gap:8px;
+      min-height: 42px;
+      padding: 10px 14px;
+      border-radius: 12px;
+      border: 1px solid transparent;
+      background: var(--accent);
+      color: #151515;
+      font-weight: 900;
+      text-decoration:none;
+      cursor:pointer;
+    }
+    .button.secondary { background: transparent; color:#fff; border-color:#656565; }
+    .button.light { background:#fff; color:var(--ink); border-color:#d7d1c5; }
+    .button.ghost { background:#f6f3ed; color:var(--ink); border-color:#dcd6ca; }
+    .button:disabled { cursor:not-allowed; opacity:.5; }
+
+    .detail-body { padding: 24px; }
+    .alert-box {
+      border: 1px solid #e2c373;
+      background: #fff8df;
+      border-radius: 14px;
+      padding: 14px;
+      margin-bottom: 18px;
+    }
+    .alert-box.danger { border-color: #e3a69c; background: #fff0ed; }
+    .alert-box strong { display:block; margin-bottom:3px; }
+    .alert-box p { margin:0; color:#62583e; font-size:.88rem; }
+    .alert-box.danger p { color:#704039; }
+
+    .summary-grid {
+      display:grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+    .stat {
+      border:1px solid var(--line);
+      border-radius:14px;
+      padding:13px;
+      background:#faf9f6;
+    }
+    .stat-label { color:var(--muted); text-transform:uppercase; font-size:.65rem; font-weight:900; letter-spacing:.065em; }
+    .stat-value { font-size:1.05rem; font-weight:900; margin-top:4px; }
+
+    .section-grid { display:grid; grid-template-columns: 1.15fr .85fr; gap:16px; margin-bottom:16px; }
+    .content-card { border:1px solid var(--line); border-radius:16px; padding:17px; background:#fff; }
+    .content-card p:last-child { margin-bottom:0; }
+    .content-card h3 { display:flex; align-items:center; justify-content:space-between; gap:8px; }
+    .small-label { font-size:.69rem; color:var(--muted); text-transform:uppercase; letter-spacing:.06em; font-weight:900; }
+
+    .route-steps { list-style:none; padding:0; margin: 14px 0 0; display:grid; }
+    .route-step { display:grid; grid-template-columns: 28px minmax(0,1fr); gap:10px; position:relative; padding-bottom:15px; }
+    .route-step:not(:last-child)::before { content:""; position:absolute; left:13px; top:25px; bottom:2px; width:2px; background:#ddd5c6; }
+    .step-dot { width:28px; height:28px; border-radius:50%; display:grid; place-items:center; background:var(--ink); color:#fff; font-size:.72rem; font-weight:900; z-index:1; }
+    .step-title { font-weight:900; }
+    .step-detail { color:var(--muted); font-size:.82rem; margin-top:2px; }
+
+    .key-list { display:grid; gap:9px; margin:0; }
+    .key-row { display:grid; grid-template-columns:110px minmax(0,1fr); gap:10px; border-bottom:1px solid #eee9df; padding-bottom:9px; }
+    .key-row:last-child { border-bottom:0; padding-bottom:0; }
+    .key-row dt { color:var(--muted); font-size:.78rem; font-weight:800; }
+    .key-row dd { margin:0; font-weight:750; font-size:.88rem; }
+
+    .link-row { display:flex; flex-wrap:wrap; gap:8px; margin-top:14px; }
+    .source-note { margin-top:18px; padding-top:15px; border-top:1px solid var(--line); color:var(--muted); font-size:.77rem; }
+    .source-note a { font-weight:800; }
+    .empty-state { text-align:center; padding:38px 18px 28px; }
+    .empty-icon { font-size:2.2rem; margin-bottom:9px; }
+    .empty-state p { max-width:520px; margin:0 auto 18px; color:var(--muted); }
+
+    .toast {
+      position: fixed;
+      left: 50%;
+      bottom: 24px;
+      transform: translate(-50%, 20px);
+      background: var(--ink);
+      color: #fff;
+      padding: 11px 14px;
+      border-radius: 12px;
+      box-shadow: var(--shadow);
+      opacity: 0;
+      pointer-events: none;
+      transition: .2s ease;
+      z-index: 50;
+      font-weight: 750;
+      font-size: .86rem;
+    }
+    .toast.show { opacity:1; transform:translate(-50%,0); }
+
+    footer { max-width:1180px; margin:0 auto; padding: 0 16px 34px; color:#6f6b63; font-size:.76rem; }
+
+    @media (max-width: 880px) {
+      .intro { grid-template-columns:1fr; }
+      .app-grid { grid-template-columns:1fr; }
+      .fixture-panel { position:static; max-height:none; overflow:visible; }
+      .fixture-list { display:flex; overflow-x:auto; scroll-snap-type:x mandatory; padding-bottom:4px; }
+      .fixture-button { min-width:260px; scroll-snap-align:start; }
+      .summary-grid { grid-template-columns:repeat(2, minmax(0,1fr)); }
+      .section-grid { grid-template-columns:1fr; }
+    }
+    @media (max-width: 520px) {
+      .prototype-tag { display:none; }
+      main { padding:16px 10px 42px; }
+      .intro-copy, .origin-card { padding:18px; }
+      .hero { padding:22px 18px; }
+      .hero-top { display:block; }
+      .status-pill { margin-top:12px; }
+      .detail-body { padding:16px; }
+      .summary-grid { gap:8px; }
+      .stat { padding:11px; }
+      .key-row { grid-template-columns:90px minmax(0,1fr); }
+      .button { width:100%; }
+      .hero-actions .button { width:auto; flex:1 1 160px; }
+    }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="topbar-inner">
+      <div class="fish-mark" aria-hidden="true">
+        <svg viewBox="0 0 64 64" role="img">
+          <path fill="currentColor" d="M8 32c8-11 18-17 31-17 6 0 11 1 16 4l-5 9 5 9c-5 3-10 4-16 4-13 0-23-6-31-17l9-8-9-8v24Zm31-9c-8 0-15 3-21 9 6 6 13 9 21 9 3 0 6-.4 9-1.4L43 32l5-7.6A29 29 0 0 0 39 23Zm-7 6a3 3 0 1 1 0 6 3 3 0 0 1 0-6Z"/>
+        </svg>
+      </div>
+      <div>
+        <div class="brand-title">Fisher Away Day</div>
+        <div class="brand-subtitle">Routes, grounds and matchday notes in one place</div>
+      </div>
+      <div class="prototype-tag">Prototype v1</div>
+    </div>
+  </header>
+
+  <main>
+    <section class="intro">
+      <div class="intro-copy">
+        <div class="eyebrow">2026/27 season · published fixtures so far</div>
+        <h1>Get there. Find the ground. Get home.</h1>
+        <p class="lede">A practical mobile guide for Fisher supporters travelling away. Select a fixture, choose where you are starting, then open live directions when you are ready to leave.</p>
+        <p class="data-note">Prototype information checked 17 July 2026. Exact trains and disruption should always be rechecked shortly before travel.</p>
+      </div>
+      <aside class="origin-card">
+        <label for="originSelect">Where are you travelling from?</label>
+        <div class="control-stack">
+          <select id="originSelect">
+            <option value="Canada Water Station, London">Canada Water</option>
+            <option value="London Bridge Station, London">London Bridge</option>
+            <option value="custom">Somewhere else…</option>
+          </select>
+          <input id="customOrigin" type="text" placeholder="Enter a station, postcode or address" hidden />
+        </div>
+        <p class="helper">Route summaries are curated for Canada Water and London Bridge. Other origins open directly in live Google Maps directions.</p>
+      </aside>
+    </section>
+
+    <section class="app-grid">
+      <aside class="fixture-panel" aria-label="Away fixtures">
+        <div class="fixture-panel-header">
+          <h2>Away fixtures</h2>
+          <p>Nine matches are currently published.</p>
+        </div>
+        <div id="fixtureList" class="fixture-list"></div>
+      </aside>
+
+      <article id="detailPanel" class="detail-panel" aria-live="polite"></article>
+    </section>
+  </main>
+
+  <footer>
+    Independent prototype for Fisher supporters. This is not a live operational travel service. Fixture and ground details should be verified with the host club before setting off.
+  </footer>
+  <div id="toast" class="toast" role="status"></div>
+
+  <script>
+    const fixtures = [
+      {
+        id: "soul-tower-hamlets-2026-07-21",
+        opponent: "Soul Tower Hamlets",
+        date: "2026-07-21T19:45:00+01:00",
+        competition: "Pre-season friendly",
+        ground: "Venue TBA",
+        address: "",
+        postcode: "",
+        status: "tba",
+        statusLabel: "Venue TBA",
+        sourceUrl: "https://www.fisherfc.org/fixture_and_result/28495/",
+        detailLevel: "tba"
+      },
+      {
+        id: "woodford-town-2026-07-25",
+        opponent: "Woodford Town",
+        date: "2026-07-25T15:00:00+01:00",
+        competition: "Pre-season friendly",
+        ground: "Whitbread’s Sports Ground",
+        address: "Durham Avenue, Woodford Green, Essex IG8 7NH",
+        postcode: "IG8 7NH",
+        station: "Woodford",
+        walk: "About 12–18 minutes",
+        status: "good",
+        statusLabel: "Guide ready",
+        sourceUrl: "https://www.fisherfc.org/fixture_and_result/pre-season-friendly-25th/",
+        groundSourceUrl: "https://www.escfl.co.uk/clubs/woodford-town-sl/",
+        detailLevel: "ready",
+        travelConfidence: "Good",
+        arrivalTarget: "13:45",
+        typicalJourney: "55–70 min",
+        leaveBy: { canada: "12:35", londonBridge: "12:30" },
+        route: {
+          canada: [
+            ["Canada Water", "Jubilee line eastbound to Stratford"],
+            ["Stratford", "Change to the Central line towards Epping"],
+            ["Woodford", "Walk to Durham Avenue and Whitbread’s Sports Ground"]
+          ],
+          londonBridge: [
+            ["London Bridge", "Northern line to Bank"],
+            ["Bank", "Change to the Central line towards Epping"],
+            ["Woodford", "Walk to Durham Avenue and Whitbread’s Sports Ground"]
+          ]
+        },
+        returnPlan: "Return by Central line from Woodford. The eastern station entrance may close later in the evening, so follow signs to the main entrance if necessary.",
+        alert: "This is a pre-season venue rather than Woodford Town’s usual first-team stadium. Use the Whitbread’s Sports Ground postcode shown here, not Ashton Playing Fields.",
+        alertType: "warn",
+        pub: {
+          name: "The Railway Tavern",
+          note: "Near Woodford station; a practical meeting point before the walk to the ground.",
+          address: "126 Snakes Lane East, Woodford Green IG8 7HY"
+        },
+        facilities: "Facilities and admission have not yet been confirmed for this friendly.",
+        access: "Woodford station provides TfL accessibility information and boarding-ramp facilities. Check access for your direction of travel and confirm ground access directly with the host club.",
+        plannerType: "tfl"
+      },
+      {
+        id: "cobham-2026-08-08",
+        opponent: "Cobham",
+        date: "2026-08-08T15:00:00+01:00",
+        competition: "FA Cup Extra Preliminary Round",
+        ground: "Reg Madgwick Stadium",
+        address: "Leg O’Mutton Field, Downside Bridge Road, Cobham, Surrey KT11 3EP",
+        postcode: "KT11 3EP",
+        station: "Cobham & Stoke d’Abernon",
+        walk: "About 1 mile / 20–25 minutes",
+        status: "good",
+        statusLabel: "Guide ready",
+        sourceUrl: "https://www.fisherfc.org/fixture_and_result/fa-cup-extra-preliminary-round-10/",
+        detailLevel: "ready",
+        travelConfidence: "Good",
+        arrivalTarget: "13:35",
+        typicalJourney: "70–85 min",
+        leaveBy: { canada: "12:10", londonBridge: "12:15" },
+        route: {
+          canada: [
+            ["Canada Water", "Jubilee line westbound to Waterloo"],
+            ["Waterloo", "South Western Railway towards Guildford via Cobham"],
+            ["Cobham & Stoke d’Abernon", "Walk roughly one mile to Downside Bridge Road"]
+          ],
+          londonBridge: [
+            ["London Bridge", "Jubilee line westbound to Waterloo"],
+            ["Waterloo", "South Western Railway towards Guildford via Cobham"],
+            ["Cobham & Stoke d’Abernon", "Walk roughly one mile to the stadium"]
+          ]
+        },
+        returnPlan: "Walk back to Cobham & Stoke d’Abernon for a direct train to Waterloo, then continue by Jubilee line. Check the day’s return times before entering the ground.",
+        alert: "The Fisher fixture page lists the station as approximately one mile from the ground. Leave enough time for the walk and for any queue at Waterloo.",
+        alertType: "warn",
+        pub: {
+          name: "The Old Plough",
+          note: "Directly by Cobham & Stoke d’Abernon station and open from 10am; useful before continuing to the ground.",
+          address: "2 Station Road, Stoke d’Abernon, Cobham KT11 3BN"
+        },
+        facilities: "Cobham’s visitor information has previously listed pay-on-the-gate admission, card or cash, parking and dogs on leads. Confirm 2026/27 prices before travel.",
+        access: "The station and walking route should be checked against individual mobility needs. Contact the host club for stadium access arrangements.",
+        plannerType: "rail",
+        railOutUrl: "https://www.nationalrail.co.uk/destinations/trains-from-london-waterloo-to-cobham-and-stoke-dabernon/",
+        railBackUrl: "https://www.nationalrail.co.uk/destinations/trains-from-cobham-and-stoke-dabernon-to-london-waterloo/"
+      },
+      {
+        id: "rusthall-2026-08-15",
+        opponent: "Rusthall",
+        date: "2026-08-15T15:00:00+01:00",
+        competition: "SCEFL Premier Division",
+        ground: "The Jockey Farm Stadium",
+        address: "Nellington Road, Rusthall, Tunbridge Wells, Kent TN4 8SH",
+        postcode: "TN4 8SH",
+        station: "Tunbridge Wells",
+        walk: "Taxi advised; bus 281 serves Rusthall village",
+        status: "warn",
+        statusLabel: "Travel alert",
+        sourceUrl: "https://www.fisherfc.org/fixture_and_result/scefl-premier-division-rusthall-a-2/",
+        detailLevel: "ready",
+        travelConfidence: "Check carefully",
+        arrivalTarget: "13:20",
+        typicalJourney: "85–110 min",
+        leaveBy: { canada: "11:40", londonBridge: "11:50" },
+        route: {
+          canada: [
+            ["Canada Water", "Jubilee line to London Bridge"],
+            ["London Bridge", "Southeastern service to Tunbridge Wells"],
+            ["Tunbridge Wells", "Taxi to the stadium, or bus 281 towards Rusthall village"]
+          ],
+          londonBridge: [
+            ["London Bridge", "Southeastern service to Tunbridge Wells"],
+            ["Tunbridge Wells", "Taxi advised by the host-club directions"],
+            ["Rusthall", "Allow additional time from the village to Nellington Road"]
+          ]
+        },
+        returnPlan: "Pre-book or plan a taxi back to Tunbridge Wells station. Do not rely on walking back quickly after the final whistle.",
+        alert: "Charing Cross and Waterloo East are closed from 26 July to 16 August 2026. Southeastern services will run differently and some will terminate at London Bridge. Check the full journey and last train shortly before travel.",
+        alertType: "danger",
+        alertUrl: "https://www.southeasternrailway.co.uk/travel-information/plan-your-journey/london-charing-cross-and-waterloo-east-station-closures",
+        pub: {
+          name: "The Rustic Retreat clubhouse bar",
+          note: "At the stadium, with draught lager and cider. This avoids adding another transfer before the match.",
+          address: "The Jockey Farm Stadium, Nellington Road, Rusthall TN4 8SH"
+        },
+        facilities: "Rusthall advertises a clubhouse bar at the ground. Other matchday facilities should be rechecked nearer the fixture.",
+        access: "A taxi is the simplest onward option from Tunbridge Wells. Contact Rusthall in advance for detailed accessibility information.",
+        plannerType: "rail",
+        railOutUrl: "https://www.nationalrail.co.uk/destinations/trains-from-london-bridge-to-tunbridge-wells/",
+        railBackUrl: "https://www.nationalrail.co.uk/destinations/trains-from-tunbridge-wells-to-london-bridge/"
+      },
+      {
+        id: "chislehurst-glebe-2026-08-29",
+        opponent: "Chislehurst Glebe",
+        date: "2026-08-29T15:00:00+01:00",
+        competition: "SCEFL Premier Division",
+        ground: "Foxbury Avenue",
+        address: "Foxbury Avenue, off Perry Street, Chislehurst BR7 6SD",
+        postcode: "BR7 6SD",
+        status: "draft",
+        statusLabel: "Guide coming",
+        sourceUrl: "https://www.fisherfc.org/fixture_and_result/scefl-premier-division-chislehurst-glebe-a/",
+        detailLevel: "draft"
+      },
+      {
+        id: "sutton-athletic-2026-09-05",
+        opponent: "Sutton Athletic",
+        date: "2026-09-05T15:00:00+01:00",
+        competition: "SCEFL Premier Division",
+        ground: "London Hire Stadium",
+        address: "Lower Road, Hextable, Kent BR8 7RZ",
+        postcode: "BR8 7RZ",
+        status: "draft",
+        statusLabel: "Guide coming",
+        sourceUrl: "https://www.fisherfc.org/fixture_and_result/scefl-premier-division-sutton-athletic-a-2/",
+        detailLevel: "draft"
+      },
+      {
+        id: "se-dons-2026-09-15",
+        opponent: "SE Dons",
+        date: "2026-09-15T19:45:00+01:00",
+        competition: "SCEFL Premier Division",
+        ground: "Oakwood Stadium",
+        address: "Old Road, Crayford, Kent DA1 4DN",
+        postcode: "DA1 4DN",
+        status: "draft",
+        statusLabel: "Guide coming",
+        sourceUrl: "https://www.fisherfc.org/fixture_and_result/scefl-premier-division-se-dons-a/",
+        detailLevel: "draft"
+      },
+      {
+        id: "erith-belvedere-2026-09-19",
+        opponent: "Erith & Belvedere",
+        date: "2026-09-19T15:00:00+01:00",
+        competition: "SCEFL Premier Division",
+        ground: "Park View Road",
+        address: "Park View Road, Welling DA16 1SY",
+        postcode: "DA16 1SY",
+        status: "draft",
+        statusLabel: "Guide coming",
+        sourceUrl: "https://www.fisherfc.org/fixture_and_result/scefl-premier-division-erith-belvedere-a/",
+        detailLevel: "draft"
+      },
+      {
+        id: "larkfield-new-hythe-2026-10-03",
+        opponent: "Larkfield & New Hythe",
+        date: "2026-10-03T15:00:00+01:00",
+        competition: "SCEFL Premier Division",
+        ground: "Eden Estates Stadium",
+        address: "251a New Hythe Lane, Larkfield, Kent ME20 6PU",
+        postcode: "ME20 6PU",
+        status: "draft",
+        statusLabel: "Guide coming",
+        sourceUrl: "https://www.fisherfc.org/fixture_and_result/scefl-premier-division-larkfield-new-hythe-a/",
+        detailLevel: "draft"
+      }
+    ];
+
+    const fixtureList = document.getElementById("fixtureList");
+    const detailPanel = document.getElementById("detailPanel");
+    const originSelect = document.getElementById("originSelect");
+    const customOrigin = document.getElementById("customOrigin");
+    const toast = document.getElementById("toast");
+    let activeId = fixtures.find(f => f.detailLevel === "ready")?.id || fixtures[0].id;
+
+    function fmtDate(iso, options) {
+      return new Intl.DateTimeFormat("en-GB", { timeZone: "Europe/London", ...options }).format(new Date(iso));
+    }
+    function dateParts(iso) {
+      return {
+        day: fmtDate(iso, { day: "2-digit" }),
+        month: fmtDate(iso, { month: "short" })
+      };
+    }
+    function fullDate(iso) {
+      return fmtDate(iso, { weekday: "long", day: "numeric", month: "long", year: "numeric" });
+    }
+    function timeOnly(iso) {
+      return fmtDate(iso, { hour: "2-digit", minute: "2-digit", hour12: false });
+    }
+    function originValue() {
+      return originSelect.value === "custom" ? customOrigin.value.trim() : originSelect.value;
+    }
+    function originMode() {
+      if (originSelect.value === "Canada Water Station, London") return "canada";
+      if (originSelect.value === "London Bridge Station, London") return "londonBridge";
+      return "custom";
+    }
+    function mapsUrl(origin, destination, mode="transit") {
+      const base = "https://www.google.com/maps/dir/?api=1";
+      return `${base}&origin=${encodeURIComponent(origin)}&destination=${encodeURIComponent(destination)}&travelmode=${mode}`;
+    }
+    function searchMapsUrl(destination) {
+      return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(destination)}`;
+    }
+    function storageGet(key) {
+      try { return window.localStorage.getItem(key); } catch (err) { return null; }
+    }
+    function storageSet(key, value) {
+      try { window.localStorage.setItem(key, value); return true; } catch (err) { return false; }
+    }
+    function showToast(message) {
+      toast.textContent = message;
+      toast.classList.add("show");
+      clearTimeout(showToast.timer);
+      showToast.timer = setTimeout(() => toast.classList.remove("show"), 2200);
+    }
+    function badgeClass(f) {
+      if (f.status === "good") return "ready";
+      if (f.status === "warn" || f.status === "tba") return "alert";
+      return "";
+    }
+
+    function renderFixtureList() {
+      fixtureList.innerHTML = fixtures.map(f => {
+        const d = dateParts(f.date);
+        return `
+          <button class="fixture-button ${f.id === activeId ? "active" : ""}" data-id="${f.id}">
+            <div class="date-block"><strong>${d.day}</strong><span>${d.month}</span></div>
+            <div>
+              <div class="fixture-opponent">${f.opponent}</div>
+              <div class="fixture-meta">${timeOnly(f.date)} · ${f.competition}</div>
+              <span class="micro-badge ${badgeClass(f)}">${f.statusLabel}</span>
+            </div>
+          </button>`;
+      }).join("");
+
+      fixtureList.querySelectorAll("button").forEach(btn => {
+        btn.addEventListener("click", () => {
+          activeId = btn.dataset.id;
+          renderFixtureList();
+          renderDetail();
+          if (window.innerWidth < 881) detailPanel.scrollIntoView({ behavior: "smooth", block: "start" });
+        });
+      });
+    }
+
+    function renderTba(f) {
+      return `
+        <header class="hero">
+          <div class="hero-top">
+            <div>
+              <div class="competition">${f.competition}</div>
+              <h2>${f.opponent} v Fisher</h2>
+              <div class="hero-meta">${fullDate(f.date)} · ${timeOnly(f.date)}</div>
+            </div>
+            <span class="status-pill tba">Venue TBA</span>
+          </div>
+          <div class="hero-actions">
+            <a class="button secondary" href="${f.sourceUrl}" target="_blank" rel="noopener">Open fixture page</a>
+          </div>
+        </header>
+        <div class="detail-body">
+          <div class="alert-box danger">
+            <strong>No route published yet</strong>
+            <p>Fisher currently lists this fixture with a venue of TBA. The navigator deliberately does not guess where Soul Tower Hamlets will host the match.</p>
+          </div>
+          <div class="empty-state">
+            <div class="empty-icon">⌛</div>
+            <h2>Waiting for the ground</h2>
+            <p>Once a venue is announced, this guide can add the recommended route, station, return plan and nearby meeting point.</p>
+            <a class="button ghost" href="https://www.fisherfc.org/fixtures-results/" target="_blank" rel="noopener">Check Fisher fixtures</a>
+          </div>
+        </div>`;
+    }
+
+    function renderDraft(f) {
+      const origin = originValue();
+      const routeDisabled = !origin;
+      return `
+        <header class="hero">
+          <div class="hero-top">
+            <div>
+              <div class="competition">${f.competition}</div>
+              <h2>${f.opponent} v Fisher</h2>
+              <div class="hero-meta">${fullDate(f.date)} · ${timeOnly(f.date)}</div>
+            </div>
+            <span class="status-pill">Guide in preparation</span>
+          </div>
+          <div class="hero-actions">
+            <a class="button" href="${routeDisabled ? "#" : mapsUrl(origin, f.address)}" ${routeDisabled ? "aria-disabled='true'" : "target='_blank' rel='noopener'"}>Open live directions</a>
+            <a class="button secondary" href="${f.sourceUrl}" target="_blank" rel="noopener">Fixture source</a>
+          </div>
+        </header>
+        <div class="detail-body">
+          <div class="summary-grid">
+            <div class="stat"><div class="stat-label">Ground</div><div class="stat-value">${f.ground}</div></div>
+            <div class="stat"><div class="stat-label">Postcode</div><div class="stat-value">${f.postcode}</div></div>
+            <div class="stat"><div class="stat-label">Kick-off</div><div class="stat-value">${timeOnly(f.date)}</div></div>
+            <div class="stat"><div class="stat-label">Guide</div><div class="stat-value">Not researched</div></div>
+          </div>
+          <div class="empty-state">
+            <div class="empty-icon">🧭</div>
+            <h2>Basic fixture details are ready</h2>
+            <p>The full guide still needs a verified station, recommended route, return plan, pub or clubhouse information, accessibility notes and a final travel check.</p>
+            <a class="button ghost" href="${searchMapsUrl(f.address)}" target="_blank" rel="noopener">View the ground</a>
+          </div>
+        </div>`;
+    }
+
+    function routeStepsHtml(f, mode) {
+      if (mode === "custom") {
+        return `<div class="alert-box"><strong>Custom starting point</strong><p>Use the live-directions button for a route from the address you entered. The written route below is only maintained for Canada Water and London Bridge.</p></div>`;
+      }
+      return `<ol class="route-steps">${f.route[mode].map((step, i) => `
+        <li class="route-step">
+          <span class="step-dot">${i + 1}</span>
+          <div><div class="step-title">${step[0]}</div><div class="step-detail">${step[1]}</div></div>
+        </li>`).join("")}</ol>`;
+    }
+
+    function renderReady(f) {
+      const origin = originValue();
+      const mode = originMode();
+      const routeDisabled = !origin;
+      const leaveBy = mode === "custom" ? "Use live route" : f.leaveBy[mode];
+      const walkingUrl = f.station ? mapsUrl(`${f.station} Station`, f.address, "walking") : "#";
+      const alertLink = f.alertUrl ? ` <a href="${f.alertUrl}" target="_blank" rel="noopener">Read the official notice.</a>` : "";
+      const pubUrl = searchMapsUrl(`${f.pub.name}, ${f.pub.address}`);
+      const attendanceKey = `fisher-away-going-${f.id}`;
+      const attending = storageGet(attendanceKey) === "1";
+
+      return `
+        <header class="hero">
+          <div class="hero-top">
+            <div>
+              <div class="competition">${f.competition}</div>
+              <h2>${f.opponent} v Fisher</h2>
+              <div class="hero-meta">${fullDate(f.date)} · ${timeOnly(f.date)} · ${f.ground}</div>
+            </div>
+            <span class="status-pill ${f.status === "warn" ? "warn" : "good"}">${f.statusLabel}</span>
+          </div>
+          <div class="hero-actions">
+            <a class="button" href="${routeDisabled ? "#" : mapsUrl(origin, f.address)}" ${routeDisabled ? "aria-disabled='true'" : "target='_blank' rel='noopener'"}>Open live directions</a>
+            <button class="button secondary" id="shareButton">Share away day</button>
+            <button class="button secondary" id="attendButton">${attending ? "✓ Saved: I’m going" : "I’m going"}</button>
+          </div>
+        </header>
+        <div class="detail-body">
+          <div class="alert-box ${f.alertType === "danger" ? "danger" : ""}">
+            <strong>${f.alertType === "danger" ? "Important travel warning" : "Before you travel"}</strong>
+            <p>${f.alert}${alertLink}</p>
+          </div>
+
+          <div class="summary-grid">
+            <div class="stat"><div class="stat-label">Leave by</div><div class="stat-value">${leaveBy}</div></div>
+            <div class="stat"><div class="stat-label">Aim to arrive</div><div class="stat-value">${f.arrivalTarget}</div></div>
+            <div class="stat"><div class="stat-label">Typical journey</div><div class="stat-value">${f.typicalJourney}</div></div>
+            <div class="stat"><div class="stat-label">Confidence</div><div class="stat-value">${f.travelConfidence}</div></div>
+          </div>
+
+          <div class="section-grid">
+            <section class="content-card">
+              <h3>Recommended route <span class="small-label">from ${mode === "canada" ? "Canada Water" : mode === "londonBridge" ? "London Bridge" : "your location"}</span></h3>
+              ${routeStepsHtml(f, mode)}
+              <div class="link-row">
+                <a class="button ghost" href="${routeDisabled ? "#" : mapsUrl(origin, f.address)}" ${routeDisabled ? "aria-disabled='true'" : "target='_blank' rel='noopener'"}>Live route</a>
+                ${f.station ? `<a class="button ghost" href="${walkingUrl}" target="_blank" rel="noopener">Station-to-ground walk</a>` : ""}
+                ${f.plannerType === "tfl" ? `<a class="button ghost" href="https://tfl.gov.uk/plan-a-journey/" target="_blank" rel="noopener">TfL planner</a>` : ""}
+                ${f.railOutUrl ? `<a class="button ghost" href="${f.railOutUrl}" target="_blank" rel="noopener">Check outbound trains</a>` : ""}
+              </div>
+            </section>
+
+            <section class="content-card">
+              <h3>Ground essentials</h3>
+              <dl class="key-list">
+                <div class="key-row"><dt>Ground</dt><dd>${f.ground}</dd></div>
+                <div class="key-row"><dt>Address</dt><dd>${f.address}</dd></div>
+                <div class="key-row"><dt>Station</dt><dd>${f.station}</dd></div>
+                <div class="key-row"><dt>Final leg</dt><dd>${f.walk}</dd></div>
+              </dl>
+              <div class="link-row">
+                <a class="button ghost" href="${searchMapsUrl(f.address)}" target="_blank" rel="noopener">View ground</a>
+                <a class="button ghost" href="${f.sourceUrl}" target="_blank" rel="noopener">Fixture page</a>
+              </div>
+            </section>
+          </div>
+
+          <div class="section-grid">
+            <section class="content-card">
+              <h3>Getting home</h3>
+              <p>${f.returnPlan}</p>
+              <div class="link-row">
+                ${f.railBackUrl ? `<a class="button ghost" href="${f.railBackUrl}" target="_blank" rel="noopener">Check return trains</a>` : ""}
+                <a class="button ghost" href="${mapsUrl(f.address, origin || "Canada Water Station, London")}" target="_blank" rel="noopener">Live route home</a>
+              </div>
+            </section>
+
+            <section class="content-card">
+              <h3>Suggested stop</h3>
+              <p><strong>${f.pub.name}</strong><br>${f.pub.note}</p>
+              <a class="button ghost" href="${pubUrl}" target="_blank" rel="noopener">Open in maps</a>
+            </section>
+          </div>
+
+          <div class="section-grid">
+            <section class="content-card">
+              <h3>Facilities</h3>
+              <p>${f.facilities}</p>
+            </section>
+            <section class="content-card">
+              <h3>Accessibility</h3>
+              <p>${f.access}</p>
+            </section>
+          </div>
+
+          <div class="source-note">
+            Fixture and ground details are based on Fisher’s published fixture page and linked host-club information. Suggested departure times are cautious planning estimates, not booked itineraries. <a href="${f.sourceUrl}" target="_blank" rel="noopener">Open the source fixture.</a>
+          </div>
+        </div>`;
+    }
+
+    function renderDetail() {
+      const f = fixtures.find(item => item.id === activeId);
+      if (!f) return;
+      if (f.detailLevel === "tba") detailPanel.innerHTML = renderTba(f);
+      else if (f.detailLevel === "draft") detailPanel.innerHTML = renderDraft(f);
+      else detailPanel.innerHTML = renderReady(f);
+
+      const shareButton = document.getElementById("shareButton");
+      if (shareButton) {
+        shareButton.addEventListener("click", async () => {
+          const text = `${f.opponent} v Fisher — ${fullDate(f.date)}, ${timeOnly(f.date)} at ${f.ground}. ${f.address}`;
+          try {
+            if (navigator.share) await navigator.share({ title: `${f.opponent} v Fisher`, text, url: f.sourceUrl });
+            else { await navigator.clipboard.writeText(`${text}\n${f.sourceUrl}`); showToast("Away-day details copied"); }
+          } catch (err) { /* user cancelled */ }
+        });
+      }
+      const attendButton = document.getElementById("attendButton");
+      if (attendButton) {
+        attendButton.addEventListener("click", () => {
+          const key = `fisher-away-going-${f.id}`;
+          const isGoing = storageGet(key) === "1";
+          storageSet(key, isGoing ? "0" : "1");
+          attendButton.textContent = isGoing ? "I’m going" : "✓ Saved: I’m going";
+          showToast(isGoing ? "Removed from your saved away days" : "Saved on this device");
+        });
+      }
+    }
+
+    originSelect.addEventListener("change", () => {
+      const isCustom = originSelect.value === "custom";
+      customOrigin.hidden = !isCustom;
+      if (isCustom) customOrigin.focus();
+      renderDetail();
+    });
+    customOrigin.addEventListener("input", renderDetail);
+
+    renderFixtureList();
+    renderDetail();
+  </script>
+</body>
+</html>
