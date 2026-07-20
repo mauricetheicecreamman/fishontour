@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#123f73">
+<title>Attendance Counter</title>
+<style>
+:root{--blue:#123f73;--dark:#0b2d54;--pale:#eef4fa;--cream:#faf8f2;--ink:#17202a;--muted:#64748b;--line:#d7e0e8;--danger:#9f2f2f;--ok:#256b43}
+*{box-sizing:border-box}body{margin:0;font-family:Inter,system-ui,-apple-system,"Segoe UI",sans-serif;color:var(--ink);background:linear-gradient(var(--pale),var(--cream));min-height:100vh}
+header{background:var(--blue);color:#fff;padding:max(22px,env(safe-area-inset-top)) 18px 22px}header div,main{width:min(720px,100%);margin:auto}h1{margin:0;font-size:clamp(1.6rem,7vw,2.25rem);letter-spacing:-.03em}header p{margin:7px 0 0;color:#dceaf7}
+main{padding:16px 14px 38px}.card{background:#fff;border:1px solid var(--line);border-radius:18px;padding:17px;margin-bottom:14px;box-shadow:0 10px 28px #123f7314}
+h2{font-size:1.05rem;margin:0 0 13px}.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}.full{grid-column:1/-1}
+label{display:grid;gap:6px;font-size:.9rem;font-weight:750;color:#334155}input,select,button{font:inherit}input,select{width:100%;padding:12px;border:1px solid #bcc9d4;border-radius:11px;background:#fff;min-height:46px}
+input:focus,select:focus,button:focus-visible{outline:3px solid #123f7338;outline-offset:2px}
+.counter{text-align:center}.caption{text-transform:uppercase;letter-spacing:.09em;color:var(--muted);font-weight:800;font-size:.82rem}.count{font-size:clamp(5.5rem,27vw,9rem);font-weight:900;line-height:.92;color:var(--dark);margin:14px 0 22px;font-variant-numeric:tabular-nums;letter-spacing:-.07em}
+.count.bump{animation:bump .17s ease-out}@keyframes bump{50%{transform:scale(1.05)}}
+.add{width:100%;min-height:175px;border:0;border-radius:22px;background:var(--blue);color:#fff;font-size:clamp(1.5rem,7vw,2.2rem);font-weight:900;box-shadow:0 10px 0 var(--dark),0 16px 28px #123f7333;touch-action:manipulation;cursor:pointer}
+.add:active{transform:translateY(6px);box-shadow:0 4px 0 var(--dark)}.add small{display:block;font-size:.8rem;color:#d8e8f7;margin-top:8px}
+.actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:15px}button.secondary,button.danger,button.ok{min-height:46px;border-radius:11px;padding:11px;border:1px solid #bcc9d4;background:#fff;font-weight:800;cursor:pointer}
+button.danger{color:var(--danger);border-color:#dfb5b5;background:#fff8f8}button.ok{background:var(--ok);border-color:var(--ok);color:#fff}
+.hint,.meta{color:var(--muted);font-size:.86rem;line-height:1.45}.status{min-height:1.4em;margin-top:10px;color:var(--ok);font-weight:750}
+.list{display:grid;gap:10px}.record{border:1px solid var(--line);border-radius:13px;padding:12px;display:grid;grid-template-columns:1fr auto;gap:7px 12px}.record .n{font-size:2rem;font-weight:900;color:var(--blue)}.record .tools{grid-column:1/-1;display:flex;gap:8px}.record .tools button{padding:7px 10px;min-height:36px}
+details summary{font-weight:800;cursor:pointer}.empty{color:var(--muted)}.footer{text-align:center;color:var(--muted);font-size:.8rem}
+@media(max-width:560px){.grid,.actions{grid-template-columns:1fr}.full{grid-column:auto}.add{min-height:190px}}
+</style>
+</head>
+<body>
+<header><div><h1>Attendance Counter</h1><p>A simple matchday clicker for volunteers on the gate.</p></div></header>
+<main>
+<section class="card">
+<h2>Match details</h2>
+<div class="grid">
+<label>Date<input id="date" type="date"></label>
+<label>Time<input id="time" type="time"></label>
+<label>Home or away<select id="venueType">
+<option value="">Select home or away</option>
+<option value="Home">Home</option>
+<option value="Away">Away</option>
+</select></label>
+<label>Volunteer name<input id="volunteer" type="text" placeholder="e.g. Billy" autocomplete="name"></label>
+<label class="full">Opponent<input id="opponent" type="text" placeholder="e.g. Rusthall"></label>
+<label class="full">Competition<select id="competition">
+<option value="">Select competition</option><option>SCEFL Premier Division</option><option>FA Cup</option><option>FA Vase</option><option>London Senior Cup</option><option>SCEFL Challenge Cup</option><option>Friendly</option><option>Other</option>
+</select></label>
+</div>
+</section>
+<section class="card counter">
+<div class="caption">Current attendance</div>
+<div id="count" class="count" aria-live="polite">0</div>
+<button id="add" class="add">+ Add attendee<small>Tap once for each person entering</small></button>
+<div class="actions"><button id="undo" class="secondary">− Undo one</button><button id="set" class="secondary">Set total</button></div>
+<p class="hint">The current total is saved automatically on this device after every tap.</p>
+</section>
+<section class="card">
+<h2>Finish or pause counting</h2>
+<div class="actions"><button id="save" class="ok">Save match record</button><button id="reset" class="danger">Start new count</button></div>
+<div id="status" class="status" aria-live="polite"></div>
+</section>
+<section class="card">
+<h2>Saved match records</h2>
+<div id="history"></div>
+<div class="actions"><button id="csv" class="secondary">Download CSV</button><button id="clear" class="danger">Delete all records</button></div>
+</section>
+<details class="card"><summary>How to use it</summary><p class="hint">Enter the date, time, home or away status, opponent, competition and volunteer name before opening the gate. Tap the large button once for each attendee. Use Undo for an accidental tap. Save the match at the end and download the CSV.</p><p class="hint"><strong>Storage:</strong> records remain only in this browser on this device. Clearing browser data removes them.</p></details>
+<p class="footer">Standalone prototype. No account or connection is required after the page loads.</p>
+</main>
+<script>
+const CURRENT="fisherCounterCurrentV1", HISTORY="fisherCounterHistoryV1";
+const $=id=>document.getElementById(id);
+const el={date:$("date"),time:$("time"),venueType:$("venueType"),volunteer:$("volunteer"),opponent:$("opponent"),competition:$("competition"),count:$("count"),add:$("add"),undo:$("undo"),set:$("set"),save:$("save"),reset:$("reset"),status:$("status"),history:$("history"),csv:$("csv"),clear:$("clear")};
+let state={date:"",time:"",venueType:"",volunteer:"",opponent:"",competition:"",count:0}, history=[];
+const today=()=>{const d=new Date(),o=d.getTimezoneOffset();return new Date(d-o*60000).toISOString().slice(0,10)};
+function load(){try{state={...state,...JSON.parse(localStorage.getItem(CURRENT)||"{}")}}catch(e){}try{const h=JSON.parse(localStorage.getItem(HISTORY)||"[]");if(Array.isArray(h))history=h}catch(e){}if(!state.date)state.date=today();formFromState();renderCount();renderHistory()}
+function persist(){localStorage.setItem(CURRENT,JSON.stringify(state))}function persistHistory(){localStorage.setItem(HISTORY,JSON.stringify(history))}
+function formFromState(){el.date.value=state.date;el.time.value=state.time||"";el.venueType.value=state.venueType||"";el.volunteer.value=state.volunteer;el.opponent.value=state.opponent;el.competition.value=state.competition}
+function stateFromForm(){state.date=el.date.value;state.time=el.time.value;state.venueType=el.venueType.value;state.volunteer=el.volunteer.value.trim();state.opponent=el.opponent.value.trim();state.competition=el.competition.value;persist()}
+function renderCount(bump=false){el.count.textContent=state.count.toLocaleString("en-GB");el.undo.disabled=state.count<1;if(bump){el.count.classList.remove("bump");void el.count.offsetWidth;el.count.classList.add("bump")}}
+function msg(t){el.status.textContent=t;clearTimeout(msg.timer);msg.timer=setTimeout(()=>{if(el.status.textContent===t)el.status.textContent=""},3500)}
+function add(){state.count++;persist();renderCount(true);if(navigator.vibrate)navigator.vibrate(15)}
+function undo(){if(state.count<1)return;state.count--;persist();renderCount();msg("Last attendee removed.")}
+function setTotal(){const v=prompt("Enter the correct attendance total:",state.count);if(v===null)return;const n=Number.parseInt(v,10);if(!Number.isInteger(n)||n<0){alert("Enter a whole number of zero or more.");return}state.count=n;persist();renderCount();msg("Attendance total updated.")}
+function validate(){stateFromForm();const m=[];if(!state.date)m.push("date");if(!state.time)m.push("time");if(!state.venueType)m.push("home or away");if(!state.opponent)m.push("opponent");if(!state.competition)m.push("competition");if(!state.volunteer)m.push("volunteer name");if(m.length){alert("Please complete: "+m.join(", ")+".");return false}return true}
+function save(){if(!validate())return;const i=history.findIndex(x=>x.date===state.date&&x.opponent.toLowerCase()===state.opponent.toLowerCase());const r={id:i>=0?history[i].id:(crypto.randomUUID?crypto.randomUUID():Date.now().toString()),date:state.date,time:state.time,venueType:state.venueType,opponent:state.opponent,competition:state.competition,volunteer:state.volunteer,attendance:state.count,savedAt:new Date().toISOString()};if(i>=0){if(!confirm("A record already exists for this match. Replace it?"))return;history[i]=r}else history.unshift(r);persistHistory();renderHistory();msg("Match record saved on this device.")}
+function reset(){if(!confirm("Start a new count? The current unsaved total will be reset."))return;state={date:today(),time:"",venueType:"",volunteer:state.volunteer,opponent:"",competition:"",count:0};persist();formFromState();renderCount();msg("Ready for a new match.");scrollTo({top:0,behavior:"smooth"})}
+function esc(v){return String(v).replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;").replaceAll("'","&#39;")}
+function niceDate(s){return new Date(s+"T12:00:00").toLocaleDateString("en-GB",{weekday:"short",day:"numeric",month:"short",year:"numeric"})}
+function niceTime(s){if(!s)return"";const [h,m]=s.split(":").map(Number);return new Date(2000,0,1,h,m).toLocaleTimeString("en-GB",{hour:"2-digit",minute:"2-digit"})}
+function matchLabel(x){return x.venueType==="Away"?`${esc(x.opponent)} v Fisher`:`Fisher v ${esc(x.opponent)}`}
+function renderHistory(){if(!history.length){el.history.innerHTML='<p class="empty">No match records saved yet.</p>';el.csv.disabled=el.clear.disabled=true;return}el.csv.disabled=el.clear.disabled=false;el.history.innerHTML='<div class="list">'+history.map(x=>`<article class="record"><div><strong>${matchLabel(x)}</strong><div class="meta">${niceDate(x.date)} · ${niceTime(x.time)} · ${esc(x.venueType||"")}<br>${esc(x.competition)} · Counted by ${esc(x.volunteer)}</div></div><div class="n">${x.attendance}</div><div class="tools"><button class="secondary" data-load="${x.id}">Load</button><button class="danger" data-delete="${x.id}">Delete</button></div></article>`).join("")+"</div>";document.querySelectorAll("[data-load]").forEach(b=>b.onclick=()=>loadRecord(b.dataset.load));document.querySelectorAll("[data-delete]").forEach(b=>b.onclick=()=>deleteRecord(b.dataset.delete))}
+function loadRecord(id){const x=history.find(r=>r.id===id);if(!x)return;state={date:x.date,time:x.time||"",venueType:x.venueType||"",volunteer:x.volunteer,opponent:x.opponent,competition:x.competition,count:x.attendance};persist();formFromState();renderCount();msg("Saved record loaded.");scrollTo({top:0,behavior:"smooth"})}
+function deleteRecord(id){const x=history.find(r=>r.id===id);if(!x||!confirm(`Delete ${x.venueType==="Away"?x.opponent+" v Fisher":"Fisher v "+x.opponent}?`))return;history=history.filter(r=>r.id!==id);persistHistory();renderHistory();msg("Record deleted.")}
+function clearAll(){if(history.length&&confirm("Delete every saved match record from this device?")){history=[];persistHistory();renderHistory();msg("All records deleted.")}}
+function q(v){return '"'+String(v??"").replaceAll('"','""')+'"'}
+function downloadCsv(){if(!history.length)return;const rows=[["Date","Time","Home or away","Opponent","Competition","Volunteer","Attendance","Saved at"],...[...history].sort((a,b)=>a.date.localeCompare(b.date)).map(x=>[x.date,x.time||"",x.venueType||"",x.opponent,x.competition,x.volunteer,x.attendance,x.savedAt])];const blob=new Blob(["\uFEFF"+rows.map(r=>r.map(q).join(",")).join("\r\n")],{type:"text/csv;charset=utf-8"}),url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download=`fisher-attendance-${today()}.csv`;a.click();URL.revokeObjectURL(url);msg("CSV downloaded.")}
+[el.date,el.time,el.venueType,el.volunteer,el.opponent,el.competition].forEach(x=>{x.addEventListener("input",stateFromForm);x.addEventListener("change",stateFromForm)});
+el.add.onclick=add;el.undo.onclick=undo;el.set.onclick=setTotal;el.save.onclick=save;el.reset.onclick=reset;el.csv.onclick=downloadCsv;el.clear.onclick=clearAll;
+document.addEventListener("keydown",e=>{const typing=e.target.matches("input,select,textarea");if(!typing&&(e.code==="Space"||e.code==="Enter")){e.preventDefault();add()}if(!typing&&e.key==="Backspace"){e.preventDefault();undo()}});
+load();
+</script>
+</body></html>
